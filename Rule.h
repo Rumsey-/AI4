@@ -1,6 +1,7 @@
 #ifndef RULE_H
 #define RULE_H
 
+#include <iostream>
 #include <list>
 #include "Block.h"
 #include "State.h"
@@ -15,6 +16,8 @@ public:
 	void applyRule(State &currentState);
 
 	void undoRule(State &currentState);
+
+	void printRule();
 };
 
 void Rule::applyRule(State &currentState) {
@@ -67,6 +70,13 @@ void Rule::undoRule(State &currentState) {
 		currentState.holding = currentBlock;
 	}
 
+}
+
+void Rule::printRule() {
+
+	if(pickUpFlag) {
+		std::cout << "PICKUP(" << currentBlock->name << ")\t:\t";
+	}
 }
 
 #endif

@@ -14,9 +14,9 @@
 #include "State.h"
 
 using namespace std;
-/*
+
 //check if in the goal state
-bool checkGoalState(State &currentState) {
+/*bool checkGoalState(State &currentState) {
 	list<Block*>::iterator blockIter;
 	for (blockIter = currentState.blockList.begin(); blockIter != currentState.blockList.end(); blockIter++) {
 		if ((*blockIter)->clear != (*blockIter)->clearGoal) return false;
@@ -25,159 +25,37 @@ bool checkGoalState(State &currentState) {
 	}
 	if (currentState.holding != currentState.holdingGoal) return false;
 	else return true;
-}
+}*/
+//returns true if the states are identical
 
-void backTrack(Rule* currentRule, State &currentState, int &globalMin, list<Rule*> &currentPath, list<Rule*> &bestPath) {
+bool compareStates (State &state1, State &state2) {
+	list<Block>::iterator blockIter1;
+	list<Block>::iterator blockIter2;
 
-	list<Rule*> rulesList; //the rules which apply from this node
-	Rule* ruleCurrent;
-	int currentMin = 0;
-	currentRule->applyRule(currentState);
-	currentPath.push_back(currentRule);
-
-
-	//if applying the current rule puts us over the current minimum, 
-	//there is no need to explore further nodes from this branch 
-
-	if (currentPath.size() > globalMin) {
-		currentPath.pop_back();
-		return;
-	}
-	//however, if it is less than the global and we're in the goal, a new best is found
-	if (checkGoalState(currentState)) {
-		globalMin = currentPath.size();
-		bestPath = currentPath;
-		return;
-	}
-	list<Block*>::iterator blockIter;
-	//find the applicable rules
-
-	if (currentState.holding != NULL) { //if a block is being held, only rules where the block is put down apply
-		for (blockIter = currentState.blockList.begin(); blockIter != currentState.blockList.end(); blockIter++) {
-			//if the block is clear the held block can be put down here
-			if ((*blockIter)->clear) {
-				(*blockIter)->clear = false; //no longer clear, has a block on it
-				Rule* newRule = new Rule;
-				newRule->currentBlock = currentState.holding;
-				newRule->onBlock = (*blockIter);
-				newRule->pickUpFlag = false;//putting down not picking up
-				rulesList.push_back(newRule);
-			}
+	blockIter2=state2.blockList.begin();
+	for (blockIter1=state1.blockList.begin(); blockIter1!=state1.blockList.end(); blockIter1++) {
+		if ((*blockIter1).clear!=(*blockIter2).clear) return false;
+		if ((*blockIter1).held!=(*blockIter2).held) return false;
+		if ((*blockIter1).onTable!=(*blockIter2).onTable) return false;
+		if ((*blockIter1).isOn==NULL) {
+			if((*blockIter2).isOn!=NULL) return false;
 		}
-		//the block could always also be put on the table
-		Rule* newRule = new Rule;
-		newRule->currentBlock = currentState.holding;
-		newRule->onBlock = NULL; //not putting it on a block but the table
-		newRule->pickUpFlag = false; //putting down
-		rulesList.push_back(newRule);
-
-	}
-	//otherwise, pick up a block
-	else {
-		for (blockIter = currentState.blockList.begin(); blockIter != currentState.blockList.end(); blockIter++) {
-			//if the block is clear it can be picked up
-			if ((*blockIter)->clear) {
-				(*blockIter)->clear = false; //no longer clear, since it's picked up
-				Rule* newRule = new Rule;
-				newRule->currentBlock = (*blockIter); //picking up the clear block that is found
-				newRule->onBlock = NULL;
-				newRule->pickUpFlag = true;//putting down not picking up
-				rulesList.push_back(newRule);
-			}
+		else if((*blockIter2).isOn==NULL) {
+			if((*blockIter1).isOn!=NULL) return false;
 		}
-	}
-	
-	
-
-	
-
-	//while there are rules to apply to this node, it does them and begins recursion
-	while (rulesList.size() != 0) {
-		ruleCurrent = rulesList.front();
-		rulesList.pop_front();
-		backTrack(ruleCurrent, currentState, globalMin, currentPath, bestPath);
-		currentPath.pop_back();
-		ruleCurrent->undoRule(currentState);
-	}
-
-	return;
-
-}
-//a starting point for recursion, checks available rules from starting point of position
-//assumes that starting point is not a goal state.
-void backTrackStart(State &currentState, int &globalMin, list<Rule*> &currentPath, list<Rule*> &bestPath) {
-
-	list<Rule*> rulesList; //the rules which apply from this node
-	Rule* ruleCurrent;
-	
-	//if applying the current rule puts us over the current minimum, 
-	//there is no need to explore further nodes from this branch 
-
-	if (currentPath.size() > globalMin) {
-		currentPath.pop_back();
-		return;
-	}
-	//however, if it is less than the global and we're in the goal, a new best is found
-	if (checkGoalState(currentState)) {
-		globalMin = currentPath.size();
-		bestPath = currentPath;
-		return;
-	}
-	list<Block*>::iterator blockIter;
-	//find the applicable rules
-
-	if (currentState.holding != NULL) { //if a block is being held, only rules where the block is put down apply
-		for (blockIter = currentState.blockList.begin(); blockIter != currentState.blockList.end(); blockIter++) {
-			//if the block is clear the held block can be put down here
-			if ((*blockIter)->clear) {
-				(*blockIter)->clear = false; //no longer clear, has a block on it
-				Rule* newRule = new Rule;
-				newRule->currentBlock = currentState.holding;
-				newRule->onBlock = (*blockIter);
-				newRule->pickUpFlag = false;//putting down not picking up
-				rulesList.push_back(newRule);
-			}
+		else {
+			if((*blockIter1).isOn->name.compare((*blockIter2).isOn->name)) return false;
 		}
-		//the block could always also be put on the table
-		Rule* newRule = new Rule;
-		newRule->currentBlock = currentState.holding;
-		newRule->onBlock = NULL; //not putting it on a block but the table
-		newRule->pickUpFlag = false; //putting down
-		rulesList.push_back(newRule);
-
+		blockIter2++;
 	}
-	//otherwise, pick up a block
-	else {
-		for (blockIter = currentState.blockList.begin(); blockIter != currentState.blockList.end(); blockIter++) {
-			//if the block is clear it can be picked up
-			if ((*blockIter)->clear) {
-				Rule* newRule = new Rule;
-				newRule->currentBlock = (*blockIter); //picking up the clear block that is found
-				newRule->onBlock = NULL;
-				newRule->pickUpFlag = true;//putting down not picking up
-				rulesList.push_back(newRule);
-			}
-		}
+	if(state1.holding==NULL) {
+		if(state2.holding!=NULL) return false;
 	}
-
-
-
-
-
-	//while there are rules to apply to this node, it does them and begins recursion
-	while (rulesList.size() != 0) {
-		ruleCurrent = rulesList.front();
-		rulesList.pop_front();
-		backTrack(ruleCurrent, currentState, globalMin, currentPath, bestPath);
-		currentPath.pop_back();
-		ruleCurrent->undoRule(currentState);
-	}
-	return;
+	else if(state1.holding->name.compare(state2.holding->name)) return false;
+	return true;
 
 }
 
-//printing the goal state for debug purposes
-*/
 void printState(State &currentState) {
 
 	list<Block>::iterator blockIter;
@@ -201,9 +79,189 @@ void printState(State &currentState) {
 		cout << "HE" << endl;
 	}
 	else {
-		cout << "HOLDING(" << currentState.holding->name << ")";
+		cout << "HOLDING(" << currentState.holding->name << ")" << endl;
 	}
 }
+
+
+void backTrack(Rule* currentRule, State &currentState, State &goalState, int &globalMin, list<Rule*> &currentPath, list<Rule*> &bestPath, list<State> &statePath) {
+
+	list<Rule*> rulesList; //the rules which apply from this node
+	Rule* ruleCurrent;
+	int currentMin = 0;
+	currentRule->applyRule(currentState);
+	
+	list<State>::iterator stateIter;
+	currentRule->printRule();
+	printState(currentState);
+
+	currentPath.push_back(currentRule);
+	
+
+	for (stateIter=statePath.begin(); stateIter!=statePath.end(); stateIter++) {
+		if (compareStates(currentState, (*stateIter))) {
+			statePath.push_back(currentState);
+			return;
+		}
+	}
+
+	
+	
+
+
+	//if applying the current rule puts us over the current minimum, 
+	//there is no need to explore further nodes from this branch 
+
+	if (currentPath.size() > globalMin) {
+		return;
+	} 
+	//however, if it is less than the global and we're in the goal, a new best is found
+	if (compareStates(currentState,goalState)) {
+		globalMin = currentPath.size();
+		bestPath = currentPath;
+		return;
+	}
+
+	//check the current state against all other states that the current application of rules has resulted in
+	//this is to prevent the duplication or looping of states
+
+	
+
+	list<Block>::iterator blockIter;
+	//find the applicable rules
+
+	if (currentState.holding != NULL) { //if a block is being held, only rules where the block is put down apply
+		for (blockIter = currentState.blockList.begin(); blockIter != currentState.blockList.end(); blockIter++) {
+			//if the block is clear the held block can be put down here
+			if ((*blockIter).clear) {
+				(*blockIter).clear = false; //no longer clear, has a block on it
+				Rule* newRule = new Rule;
+				newRule->currentBlock = currentState.holding;
+				newRule->onBlock = &(*blockIter);
+				newRule->pickUpFlag = false;//putting down not picking up
+				rulesList.push_back(newRule);
+			}
+		}
+		//the block could always also be put on the table
+		Rule* newRule = new Rule;
+		newRule->currentBlock = currentState.holding;
+		newRule->onBlock = NULL; //not putting it on a block but the table
+		newRule->pickUpFlag = false; //putting down
+		rulesList.push_back(newRule);
+
+	}
+	//otherwise, pick up a block
+	else {
+		for (blockIter = currentState.blockList.begin(); blockIter != currentState.blockList.end(); blockIter++) {
+			//if the block is clear it can be picked up
+			if ((*blockIter).clear) {
+				(*blockIter).clear = false; //no longer clear, since it's picked up
+				Rule* newRule = new Rule;
+				newRule->currentBlock = &(*blockIter); //picking up the clear block that is found
+				newRule->onBlock = NULL;
+				newRule->pickUpFlag = true;//putting down not picking up
+				rulesList.push_back(newRule);
+			}
+		}
+	}
+	
+	
+
+	
+
+	//while there are rules to apply to this node, it does them and begins recursion
+	while (rulesList.size() != 0) {
+		ruleCurrent = rulesList.front();
+		rulesList.pop_front();
+		backTrack(ruleCurrent, currentState, goalState, globalMin, currentPath, bestPath, statePath);
+		int foo = currentPath.size();
+		currentPath.pop_back();
+		foo = statePath.size();
+		statePath.pop_back();
+		ruleCurrent->undoRule(currentState);
+	}
+
+	return;
+
+}
+//a starting point for recursion, checks available rules from starting point of position
+//assumes that starting point is not a goal state.
+void backTrackStart(State &currentState, State &goalState, int &globalMin, list<Rule*> &currentPath, list<Rule*> &bestPath) {
+
+	list<Rule*> rulesList; //the rules which apply from this node
+	Rule* ruleCurrent;
+	
+	//if applying the current rule puts us over the current minimum, 
+	//there is no need to explore further nodes from this branch 
+
+	if (currentPath.size() > globalMin) {
+		currentPath.pop_back();
+		return;
+	}
+	//however, if it is less than the global and we're in the goal, a new best is found
+	if (compareStates(currentState,goalState)) {
+		globalMin = currentPath.size();
+		bestPath = currentPath;
+		return;
+	}
+	list<Block>::iterator blockIter;
+	//find the applicable rules
+
+	if (currentState.holding != NULL) { //if a block is being held, only rules where the block is put down apply
+		for (blockIter = currentState.blockList.begin(); blockIter != currentState.blockList.end(); blockIter++) {
+			//if the block is clear the held block can be put down here
+			if ((*blockIter).clear) {
+				(*blockIter).clear = false; //no longer clear, has a block on it
+				Rule* newRule = new Rule;
+				newRule->currentBlock = currentState.holding;
+				newRule->onBlock = &(*blockIter);
+				newRule->pickUpFlag = false;//putting down not picking up
+				rulesList.push_back(newRule);
+			}
+		}
+		//the block could always also be put on the table
+		Rule* newRule = new Rule;
+		newRule->currentBlock = currentState.holding;
+		newRule->onBlock = NULL; //not putting it on a block but the table
+		newRule->pickUpFlag = false; //putting down
+		rulesList.push_back(newRule);
+
+	}
+	//otherwise, pick up a block
+	else {
+		for (blockIter = currentState.blockList.begin(); blockIter != currentState.blockList.end(); blockIter++) {
+			//if the block is clear it can be picked up
+			if ((*blockIter).clear) {
+				Rule* newRule = new Rule;
+				newRule->currentBlock = &(*blockIter); //picking up the clear block that is found
+				newRule->onBlock = NULL;
+				newRule->pickUpFlag = true;//putting down not picking up
+				rulesList.push_back(newRule);
+			}
+		}
+	}
+
+
+	list<State> statePath;
+	statePath.push_back(currentState);
+
+
+	//while there are rules to apply to this node, it does them and begins recursion
+	while (rulesList.size() != 0) {
+		ruleCurrent = rulesList.front();
+		rulesList.pop_front();
+		backTrack(ruleCurrent, currentState, goalState, globalMin, currentPath, bestPath, statePath);
+		int foo = currentPath.size();
+		currentPath.pop_back();
+		ruleCurrent->undoRule(currentState);
+	}
+	return;
+
+}
+
+//printing the goal state for debug purposes
+
+
 
 
 int main(int argc, char* argv[])
@@ -228,7 +286,9 @@ int main(int argc, char* argv[])
 	list<Block>::iterator blockIter;
 
 	State startState;
+	startState.holding=NULL;
 	State goalState;
+	goalState.holding=NULL;
 
 	int i, j;
 
@@ -427,13 +487,27 @@ int main(int argc, char* argv[])
 	}
 
 		int min = 1000; //making no assumptings about the minimum s
-	//list<Rule*> currentPath;
-	//list<Rule*> bestPath;
+	list<Rule*> currentPath;
+	list<Rule*> bestPath;
 	printState(startState);
 	printState(goalState);
-	//backTrackStart(currentState, min, currentPath, bestPath);
-	
 
+	State currentState = startState;
+
+	backTrackStart(currentState, goalState, min, currentPath, bestPath);
+	
+	bool test = compareStates(startState, goalState);
+
+	//print path: iterate, print rule, apply rule, print state
+
+	Rule newRule;
+	newRule.pickUpFlag=true;
+	newRule.currentBlock=&(startState.blockList.front());
+
+	newRule.printRule();
+	newRule.applyRule(startState);
+	printState(startState);
+	test = compareStates(currentState,startState);
 	
 	return 0;
 
