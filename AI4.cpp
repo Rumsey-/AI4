@@ -105,7 +105,7 @@ void backTrack(Rule* currentRule, State &currentState, State &goalState, int &gl
 		}
 	}
 
-	
+	statePath.push_back(currentState);
 	
 
 
@@ -134,7 +134,6 @@ void backTrack(Rule* currentRule, State &currentState, State &goalState, int &gl
 		for (blockIter = currentState.blockList.begin(); blockIter != currentState.blockList.end(); blockIter++) {
 			//if the block is clear the held block can be put down here
 			if ((*blockIter).clear) {
-				(*blockIter).clear = false; //no longer clear, has a block on it
 				Rule* newRule = new Rule;
 				newRule->currentBlock = currentState.holding;
 				newRule->onBlock = &(*blockIter);

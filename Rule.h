@@ -29,6 +29,7 @@ void Rule::applyRule(State &currentState) {
 		currentState.holding = currentBlock;
 		currentBlock->held = true;
 		currentBlock->onTable = false;
+		currentBlock->clear = false;
 		if (currentBlock->isOn!=NULL) currentBlock->isOn->clear = true;
 		currentBlock->isOn = NULL;
 
@@ -76,7 +77,16 @@ void Rule::printRule() {
 
 	if(pickUpFlag) {
 		std::cout << "PICKUP(" << currentBlock->name << ")\t:\t";
+		return;
 	}
+	else if(onBlock==NULL) {
+		std::cout << "PUTDOWN(" << currentBlock->name << ")\t:\t";
+	}
+
+	else {
+		std::cout << "STACK(" << currentBlock->name << ", " << onBlock->name << ")\t:\t";
+	}
+
 }
 
 #endif
