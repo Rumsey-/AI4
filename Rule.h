@@ -1,6 +1,7 @@
 #ifndef RULE_H
 #define RULE_H
 
+#include <string>
 #include <iostream>
 #include <list>
 #include "Block.h"
@@ -9,8 +10,8 @@
 class Rule {
 
 public:
-	Block* currentBlock;
-	Block* onBlock; //if the block is being put down, this specifies where
+	std::string currentBlock;
+	std::string onBlock; //if the block is being put down, this specifies where
 	
 	bool pickUpFlag; //true if the block is being picked up
 	void applyRule(State &currentState);
@@ -22,30 +23,44 @@ public:
 
 void Rule::applyRule(State &currentState) {
 	//pick up block
-	std::list<Block*>::iterator blockIter;
+	std::list<Block>::iterator blockIter;
 	//currentState.currentBestPath.push_back(this); //current rule added to the path of rules
 
 	if (pickUpFlag==true) {
-		currentState.holding = currentBlock;
-		currentBlock->held = true;
-		currentBlock->onTable = false;
-		currentBlock->clear = false;
-		if (currentBlock->isOn!=NULL) currentBlock->isOn->clear = true;
-		currentBlock->isOn = NULL;
+		currentState.holding = currentBlock->name;
+		for(blockIter=currentState.blockList.begin();blockIter!=currentState.blockList.end(); blockIter++) {
+		(*blockIter)->held = true;
+		(*blockIter)->onTable = false;
+		(*blockIter)->clear = false;
+		(*blockIter)->isOn = "HELD";
+		}
+		if (currentBlock->isOn.compare("TABLE")!=0)
+		{
+			for(blockIter=currentState.blockList.begin();blockIter!=currentState.blockList.end(); blockIter++) {
+				if(currentBlock->isOn.compare((*blockIter)->name)==0) (*blockIter)->clear=true;
+		}
+		currentState.holding="HE";
 
 	}
 	//if putting on table
-	else if (onBlock==NULL) {
-		currentState.holding->held = false;
-		currentState.holding->onTable = true;
-		currentState.holding = NULL;
+	else if (!onBlock.compare("TABLE")) {
+		for(blockIter=currentState.blockList.begin();blockIter!=currentState.blockList.end(); blockIter++) {
+		(*blockIter)->held = false;
+		(*blockIter)->onTable = true;
+		currentState.holding = "HE";
+		}
 	}
 
 	else {
-		onBlock->clear = false;
-		currentState.holding->isOn = onBlock;
-		currentState.holding->clear = true;
-		currentState.holding = NULL;
+		for(blockIter=currentState.blockList.begin();blockIter!=currentState.blockList.end(); blockIter++) {
+			(*blockIter)->clear=true;
+			(*blockIter)->held=false;
+			(*blockIter)->isOn=onBlock;
+		}
+		for(blockIter=currentState.blockList.begin();blockIter!=currentState.blockList.end(); blockIter++) {
+			(*blockIter)->clear=false;
+		}
+		currentState.holding="NONE";
 	}
 
 }
@@ -66,9 +81,10 @@ void Rule::undoRule(State &currentState) {
 	//if it wasn't picked up, it was put down, so pick it up to undo
 	else {
 		if (onBlock!=NULL) onBlock->clear = true;
-		currentBlock->held = true;
-		currentBlock->isOn = NULL;
-		currentState.holding = currentBlock;
+		for(blockIter=currentState.blockList.begin();blockIter!=currentState.blockList.end(); blockIter++) {
+			(*blockIter)->held = true;
+			(*blockIter)->isOn = "NONE";
+			currentState.holding = currentBlock;
 	}
 
 }

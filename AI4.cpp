@@ -37,21 +37,10 @@ bool compareStates (State &state1, State &state2) {
 		if ((*blockIter1).clear!=(*blockIter2).clear) return false;
 		if ((*blockIter1).held!=(*blockIter2).held) return false;
 		if ((*blockIter1).onTable!=(*blockIter2).onTable) return false;
-		if ((*blockIter1).isOn==NULL) {
-			if((*blockIter2).isOn!=NULL) return false;
-		}
-		else if((*blockIter2).isOn==NULL) {
-			if((*blockIter1).isOn!=NULL) return false;
-		}
-		else {
-			if((*blockIter1).isOn->name.compare((*blockIter2).isOn->name)) return false;
-		}
+		if((*blockIter1).isOn.compare((*blockIter2).isOn)) return false;
 		blockIter2++;
 	}
-	if(state1.holding==NULL) {
-		if(state2.holding!=NULL) return false;
-	}
-	else if(state1.holding->name.compare(state2.holding->name)) return false;
+	if(state1.holding.compare(state2.holding)) return false;
 	return true;
 
 }
@@ -66,8 +55,8 @@ void printState(State &currentState) {
 			cout << "ON_TABLE(" << (*blockIter).name << "), ";
 		}
 
-		if ((*blockIter).isOn != NULL) {
-			cout << "ON(" << (*blockIter).name << ", " << (*blockIter).isOn->name << "), ";
+		if ((*blockIter).isOn.compare("TABLE") != 0) {
+			cout << "ON(" << (*blockIter).name << ", " << (*blockIter).isOn << "), ";
 		}
 
 		if ((*blockIter).clear) {
@@ -75,11 +64,11 @@ void printState(State &currentState) {
 		}
 	}
 
-	if (currentState.holding == NULL) {
+	if (currentState.holding.compare("HE") == 0) {
 		cout << "HE" << endl;
 	}
 	else {
-		cout << "HOLDING(" << currentState.holding->name << ")" << endl;
+		cout << "HOLDING(" << currentState.holding << ")" << endl;
 	}
 }
 
@@ -370,29 +359,25 @@ int main(int argc, char* argv[])
 						}
 
 					}
-					Block* tempBlock = NULL;
 					for (blockIter = blockList.begin(); blockIter != blockList.end(); blockIter++) {
 						if (!(*blockIter).name.compare(tempName)) {
-							tempBlock = &(*blockIter);
+							(*blockIter).onTable=false;
 						}
 					}
 
-					for (blockIter = blockList.begin(); blockIter != blockList.end(); blockIter++) {
-						if (!(*blockIter).name.compare(tempName2)) {
-							(*blockIter).isOn = tempBlock;
-						}
-					}
+					(*blockIter).isOn=tempName2;
+
 				}
 
 				if (!buffer.compare("HE")) {
-					startState.holding = NULL;
+					startState.holding = "HE";
 				}
 
 				if (!buffer.compare("HOLDING")) {
 					for (blockIter = blockList.begin(); blockIter != blockList.end(); blockIter++) {
 						if (!(*blockIter).name.compare(tempName)) {
 							(*blockIter).held = true;
-							startState.holding = &(*blockIter);
+							startState.holding = (*blockIter).name;
 						}
 					}
 				}
@@ -403,7 +388,6 @@ int main(int argc, char* argv[])
 			(*blockIter).clear = false;
 			(*blockIter).held = false;
 			(*blockIter).onTable = false;
-			(*blockIter).isOn = NULL;
 		}
 		//build goal state
 		if (!buffer.compare("GOAL STATE")) {
@@ -428,6 +412,7 @@ int main(int argc, char* argv[])
 					for (blockIter = blockList.begin(); blockIter != blockList.end(); blockIter++) {
 						if (!(*blockIter).name.compare(tempName)) {
 							(*blockIter).onTable = true;
+							(*blockIter).isOn = "TABLE";
 						}
 					}
 				}
@@ -452,30 +437,24 @@ int main(int argc, char* argv[])
 						}
 
 					}
-					Block* tempBlock = NULL;
+					
 					for (blockIter = blockList.begin(); blockIter != blockList.end(); blockIter++) {
 						if (!(*blockIter).name.compare(tempName)) {
-							tempBlock = &(*blockIter);
-							tempBlock->clear = false;
+							(*blockIter).isOn=tempName2;
 						}
 					}
 
-					for (blockIter = blockList.begin(); blockIter != blockList.end(); blockIter++) {
-						if (!(*blockIter).name.compare(tempName2)) {
-							(*blockIter).isOn = tempBlock;
-						}
-					}
 				}
 
 				if (!buffer.compare("HE")) {
-					goalState.holding = NULL;
+					goalState.holding = "HE";
 				}
 
 				if (!buffer.compare("HOLDING")) {
 					for (blockIter = blockList.begin(); blockIter != blockList.end(); blockIter++) {
 						if (!(*blockIter).name.compare(tempName)) {
 							(*blockIter).held = true;
-							goalState.holding = &(*blockIter);
+							goalState.holding = (*blockIter).name;
 						}
 					}
 				}

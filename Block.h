@@ -14,7 +14,7 @@ public:
 
 	bool held;
 
-	Block* isOn;
+	std::string isOn;
 	
 };
 

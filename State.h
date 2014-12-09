@@ -8,7 +8,7 @@ class State {
 
 public:
 	std::list<Block> blockList;
-	Block* holding;
+	std::string holding;
 
 };
 
